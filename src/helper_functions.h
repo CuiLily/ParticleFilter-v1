@@ -93,15 +93,15 @@ inline bool read_map_data(std::string filename, Map& map) {
 		iss_map >> landmark_y_f;
 		iss_map >> id_i;
 
-		// Declare single_landmark:
-		Map::single_landmark_s single_landmark_temp;
+		// Declare single_landmark: 是Map类的一个结构体
+		Map::single_landmark_s single_landmark_temp; 
 
-		// Set values
+		// Set values 设置map的对象
 		single_landmark_temp.id_i = id_i;
 		single_landmark_temp.x_f  = landmark_x_f;
 		single_landmark_temp.y_f  = landmark_y_f;
 
-		// Add to landmark list of map:
+		// Add to landmark list of map:添加到map中的landmark_list
 		map.landmark_list.push_back(single_landmark_temp);
 	}
 	return true;
@@ -131,21 +131,21 @@ inline bool read_control_data(std::string filename, std::vector<control_s>& posi
 		// Declare position values:
 		double velocity, yawrate;
 
-		// Declare single control measurement:
-		control_s meas;
+		// Declare single control measurement: control_s是结构体
+		control_s meas; 
 
 		//read data from line to values:
 
-		iss_pos >> velocity;
+		iss_pos >> velocity; //把iss_pos里的字符提取出来
 		iss_pos >> yawrate;
 
 		
 		// Set values
-		meas.velocity = velocity;
+		meas.velocity = velocity; //赋值给结构体的这个对象
 		meas.yawrate = yawrate;
 
 		// Add to list of control measurements:
-		position_meas.push_back(meas);
+		position_meas.push_back(meas); //把这个测量值放进position_meas这个vector
 	}
 	return true;
 }
@@ -172,10 +172,10 @@ inline bool read_gt_data(std::string filename, std::vector<ground_truth>& gt) {
 		std::istringstream iss_pos(line_pos);
 
 		// Declare position values:
-		double x, y, azimuth;
+		double x, y, azimuth;//方位角（就是围绕z轴转的角度）
 
 		// Declare single ground truth:
-		ground_truth single_gt; 
+		ground_truth single_gt; //一个ground truth
 
 		//read data from line to values:
 		iss_pos >> x;
@@ -222,14 +222,14 @@ inline bool read_landmark_data(std::string filename, std::vector<LandmarkObs>& o
 		iss_obs >> local_y;
 
 		// Declare single landmark measurement:
-		LandmarkObs meas;
+		LandmarkObs meas; //LandmarkObs是一个结构体
 
 		// Set values
 		meas.x = local_x;
 		meas.y = local_y;
 
 		// Add to list of control measurements:
-		observations.push_back(meas);
+		observations.push_back(meas); //把meas存到observation这个vector里
 	}
 	return true;
 }
