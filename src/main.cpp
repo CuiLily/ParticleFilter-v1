@@ -78,9 +78,9 @@ int main() {
 	for (int i = 0; i < num_time_steps; ++i) {
 		cout << "Time step: " << i << endl;
 		// Read in landmark observations for current time step.
-		ostringstream file;//向文件file写入6位数字
+,		ostringstream file;//创建一个空白observation.txt文件,文件名后缀长6位数字
 		file << "data/observation/observations_" << setfill('0') << setw(6) << i+1 << ".txt";
-		vector<LandmarkObs> observations;
+		vector<LandmarkObs> observations;//构造存储LandmarkObs结构体的vector,叫做observation
 		if (!read_landmark_data(file.str(), observations)) {
 			cout << "Error: Could not open observation file " << i+1 << endl;
 			return -1;
@@ -97,7 +97,7 @@ int main() {
 			// Predict the vehicle's next state (noiseless).
 			pf.prediction(delta_t, sigma_pos, position_meas[i-1].velocity, position_meas[i-1].yawrate);
 		}
-		// simulate the addition of noise to noiseless observation data.
+		// simulate the addition of noise to noiseless observation data.模拟将噪声添加到无噪声观测数据中。
 		vector<LandmarkObs> noisy_observations;
 		LandmarkObs obs;
 		for (int j = 0; j < observations.size(); ++j) {
