@@ -78,7 +78,7 @@ int main() {
 	for (int i = 0; i < num_time_steps; ++i) {
 		cout << "Time step: " << i << endl;
 		// Read in landmark observations for current time step.
-		ostringstream file;
+		ostringstream file;//向文件file写入6位数字
 		file << "data/observation/observations_" << setfill('0') << setw(6) << i+1 << ".txt";
 		vector<LandmarkObs> observations;
 		if (!read_landmark_data(file.str(), observations)) {

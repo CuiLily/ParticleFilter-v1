@@ -70,7 +70,7 @@ inline double * getError(double gt_x, double gt_y, double gt_theta, double pf_x,
 inline bool read_map_data(std::string filename, Map& map) {
 
 	// Get file of map:
-	std::ifstream in_file_map(filename.c_str(),std::ifstream::in);
+	std::ifstream in_file_map(filename.c_str(),std::ifstream::in);//ifstream:输入文件流，用于从文件读取信息。
 	// Return if we can't open the file.
 	if (!in_file_map) {
 		return false;
@@ -89,7 +89,7 @@ inline bool read_map_data(std::string filename, Map& map) {
 		int id_i;
 
 		// Read data from current line to values::
-		iss_map >> landmark_x_f;
+		iss_map >> landmark_x_f; //把iss_map中的，以空格隔开的字符提取出来
 		iss_map >> landmark_y_f;
 		iss_map >> id_i;
 
