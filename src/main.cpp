@@ -16,14 +16,11 @@ using namespace std;
 
 
 int main() {
-	
-	// parameters related to grading.
+
 	int time_steps_before_lock_required = 100; // number of time steps before accuracy is checked by grader.
 	double max_runtime = 45; // Max allowable runtime to pass [sec]
 	double max_translation_error = 1; // Max allowable translation error to pass [m]
 	double max_yaw_error = 0.05; // Max allowable yaw error [rad]
-
-
 
 	// Start timer.
 	int start = clock();
@@ -50,21 +47,21 @@ int main() {
 	double n_x, n_y, n_theta, n_range, n_heading;
 	// Read map data
 	Map map;
-	if (!read_map_data("data/map_data.txt", map)) {
+	if (!read_map_data("ourdata/map_data.txt", map)) {
 		cout << "Error: Could not open map file" << endl;
 		return -1;
 	}
 
 	// Read position data
 	vector<control_s> position_meas;
-	if (!read_control_data("data/control_data.txt", position_meas)) {
+	if (!read_control_data("ourdata/control_data.txt", position_meas)) {
 		cout << "Error: Could not open position/control measurement file" << endl;
 		return -1;
 	}
 	
 	// Read ground truth data
 	vector<ground_truth> gt;
-	if (!read_gt_data("data/gt_data.txt", gt)) {
+	if (!read_gt_data("ourdata/gt_data.txt", gt)) {
 		cout << "Error: Could not open ground truth data file" << endl;
 		return -1;
 	}
@@ -78,8 +75,8 @@ int main() {
 	for (int i = 0; i < num_time_steps; ++i) {
 		cout << "Time step: " << i << endl;
 		// Read in landmark observations for current time step.
-		ostringstream file;//向文件file写入6位数字
-		file << "data/observation/observations_" << setfill('0') << setw(6) << i+1 << ".txt";
+		ostringstream file;
+		file << "ourdata/observation/observations_" << setfill('0') << setw(6) << i+1 << ".txt";
 		vector<LandmarkObs> observations;
 		if (!read_landmark_data(file.str(), observations)) {
 			cout << "Error: Could not open observation file " << i+1 << endl;

@@ -10,9 +10,10 @@ public:
 	
 	struct single_landmark_s{
 
-		int id_i ; // Landmark ID
-		float x_f; // Landmark x-position in the map (global coordinates)
-		float y_f; // Landmark y-position in the map (global coordinates)
+		std::string id_i ; // Landmark ID
+		double x_i; // Landmark x-position in the map (global coordinates)
+        double y_i; // Landmark y-position in the map (global coordinates)
+        double theta_i; //Landmark theta in the map (global coordinates)
 	};
 
 	std::vector<single_landmark_s> landmark_list ; // List of landmarks in the map

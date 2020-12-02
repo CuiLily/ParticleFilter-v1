@@ -6,12 +6,14 @@
 #ifndef HELPER_FUNCTIONS_H_
 #define HELPER_FUNCTIONS_H_
 
+#include <string>
 #include <sstream>
 #include <fstream>
 #include <math.h>
 #include <vector>
 #include "map.h"
 
+using namespace std;
 /*
  * Struct representing one position/control measurement.
  */
@@ -35,10 +37,16 @@ struct ground_truth {
  * Struct representing one landmark observation measurement.
  */
 struct LandmarkObs {
-	
-	int id;				// Id of matching landmark in the map.
-	double x;			// Local (vehicle coordinates) x position of landmark observation [m]
-	double y;			// Local (vehicle coordinates) y position of landmark observation [m]
+
+    int id;
+    // position of center
+    double x;			// Local (vehicle coordinates) x position of landmark observation [m]
+    double y;			// Local (vehicle coordinates) y position of landmark observation [m]
+
+	// probability for each candidates of each digit
+	double d10, d11, d12, d13, d14, d15, d16, d17, d18 ,d19; // digit1
+	double d20, d21, d22, d23, d24, d25, d26, d27, d28, d29; // digit2
+	double d30, d31, d32, d33, d34, d35, d36, d37, d38, d39; // digit3
 };
 
 /*
@@ -75,6 +83,9 @@ inline bool read_map_data(std::string filename, Map& map) {
 	if (!in_file_map) {
 		return false;
 	}
+    //ignore the 1st line of txt file
+    std::string dummyLine;
+    getline(in_file_map, dummyLine);
 	
 	// Declare single line of map file:
 	std::string line_map;
@@ -85,21 +96,28 @@ inline bool read_map_data(std::string filename, Map& map) {
 		std::istringstream iss_map(line_map);
 
 		// Declare landmark values and ID:
-		float landmark_x_f, landmark_y_f;
-		int id_i;
+        std::string id_i;
+        double landmark_x_i, landmark_y_i, landmark_theta_i;
 
 		// Read data from current line to values::
-		iss_map >> landmark_x_f; //把iss_map中的，以空格隔开的字符提取出来
-		iss_map >> landmark_y_f;
-		iss_map >> id_i;
+        iss_map >> id_i;
+		iss_map >> landmark_x_i; //把iss_map中的，以空格隔开的字符提取出来
+		iss_map >> landmark_y_i;
+		iss_map >> landmark_theta_i;
+
+		cout<<"id_i: "<<id_i<<endl;
+        cout << "landmark_x_i: " << landmark_x_i << endl;
+        cout << "landmark_y_i: " << landmark_y_i << endl;
+        cout << "landmark_theta_i: " << landmark_theta_i << endl;
 
 		// Declare single_landmark:
 		Map::single_landmark_s single_landmark_temp;
 
 		// Set values
 		single_landmark_temp.id_i = id_i;
-		single_landmark_temp.x_f  = landmark_x_f;
-		single_landmark_temp.y_f  = landmark_y_f;
+		single_landmark_temp.x_i  = landmark_x_i;
+		single_landmark_temp.y_i  = landmark_y_i;
+		single_landmark_temp.theta_i = landmark_theta_i;
 
 		// Add to landmark list of map:
 		map.landmark_list.push_back(single_landmark_temp);
@@ -119,7 +137,9 @@ inline bool read_control_data(std::string filename, std::vector<control_s>& posi
 	if (!in_file_pos) {
 		return false;
 	}
-
+    //ignore the 1st line of txt file
+    std::string dummyLine;
+    getline(in_file_pos, dummyLine);
 	// Declare single line of position measurement file:
 	std::string line_pos;
 
@@ -139,7 +159,9 @@ inline bool read_control_data(std::string filename, std::vector<control_s>& posi
 		iss_pos >> velocity;
 		iss_pos >> yawrate;
 
-		
+        cout << "velocity: " << velocity << endl;
+        cout << "yaw rate: " << yawrate << endl;
+
 		// Set values
 		meas.velocity = velocity;
 		meas.yawrate = yawrate;
@@ -162,7 +184,9 @@ inline bool read_gt_data(std::string filename, std::vector<ground_truth>& gt) {
 	if (!in_file_pos) {
 		return false;
 	}
-
+    //ignore the 1st line of txt file
+    std::string dummyLine;
+    getline(in_file_pos, dummyLine);
 	// Declare single line of position measurement file:
 	std::string line_pos;
 
@@ -181,6 +205,10 @@ inline bool read_gt_data(std::string filename, std::vector<ground_truth>& gt) {
 		iss_pos >> x;
 		iss_pos >> y;
 		iss_pos >> azimuth;
+
+        cout << "x: " << x << endl;
+        cout << "y: " << y << endl;
+        cout<<"azimuth: " << azimuth <<endl;
 
 		// Set values
 		single_gt.x = x;
@@ -205,6 +233,9 @@ inline bool read_landmark_data(std::string filename, std::vector<LandmarkObs>& o
 	if (!in_file_obs) {
 		return false;
 	}
+    //ignore the 1st line of txt file
+    std::string dummyLine;
+    getline(in_file_obs, dummyLine);
 
 	// Declare single line of landmark measurement file:
 	std::string line_obs;
@@ -216,10 +247,49 @@ inline bool read_landmark_data(std::string filename, std::vector<LandmarkObs>& o
 
 		// Declare position values:
 		double local_x, local_y;
+        double d10, d11, d12, d13, d14, d15, d16, d17, d18 ,d19; // digit1
+        double d20, d21, d22, d23, d24, d25, d26, d27, d28, d29; // digit2
+        double d30, d31, d32, d33, d34, d35, d36, d37, d38, d39; // digit3
 
 		//read data from line to values:
 		iss_obs >> local_x;
 		iss_obs >> local_y;
+		// for digit1
+		iss_obs >> d10;
+        iss_obs >> d11;
+        iss_obs >> d12;
+        iss_obs >> d13;
+        iss_obs >> d14;
+        iss_obs >> d15;
+        iss_obs >> d16;
+        iss_obs >> d17;
+        iss_obs >> d18;
+        iss_obs >> d19;
+        // for digit2
+        iss_obs >> d20;
+        iss_obs >> d21;
+        iss_obs >> d22;
+        iss_obs >> d23;
+        iss_obs >> d24;
+        iss_obs >> d25;
+        iss_obs >> d26;
+        iss_obs >> d27;
+        iss_obs >> d28;
+        iss_obs >> d29;
+        // for digit
+        iss_obs >> d30;
+        iss_obs >> d31;
+        iss_obs >> d32;
+        iss_obs >> d33;
+        iss_obs >> d34;
+        iss_obs >> d35;
+        iss_obs >> d36;
+        iss_obs >> d37;
+        iss_obs >> d38;
+        iss_obs >> d39;
+
+        cout << "local_x: " << local_x << endl;
+        cout << "local_y: " << local_y << endl;
 
 		// Declare single landmark measurement:
 		LandmarkObs meas;
@@ -227,6 +297,39 @@ inline bool read_landmark_data(std::string filename, std::vector<LandmarkObs>& o
 		// Set values
 		meas.x = local_x;
 		meas.y = local_y;
+		//for digit2
+		meas.d10 = d10;
+        meas.d11 = d11;
+        meas.d12 = d12;
+        meas.d13 = d13;
+        meas.d14 = d14;
+        meas.d15 = d15;
+        meas.d16 = d16;
+        meas.d17 = d17;
+        meas.d18 = d18;
+        meas.d19 = d19;
+        //for digit1
+        meas.d20 = d20;
+        meas.d21 = d21;
+        meas.d22 = d22;
+        meas.d23 = d23;
+        meas.d24 = d24;
+        meas.d25 = d25;
+        meas.d26 = d26;
+        meas.d27 = d27;
+        meas.d28 = d28;
+        meas.d29 = d29;
+        //for digit3
+        meas.d30 = d30;
+        meas.d31 = d31;
+        meas.d32 = d32;
+        meas.d33 = d33;
+        meas.d34 = d34;
+        meas.d35 = d35;
+        meas.d36 = d36;
+        meas.d37 = d37;
+        meas.d38 = d38;
+        meas.d39 = d39;
 
 		// Add to list of control measurements:
 		observations.push_back(meas);

@@ -139,7 +139,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
             for(int k=0; k<map_landmarks.landmark_list.size(); ++k){
                 Map::single_landmark_s cur_l = map_landmarks.landmark_list[k];
-                double distance = dist(transformed_obs.x, transformed_obs.y, cur_l.x_f, cur_l.y_f);
+                double distance = dist(transformed_obs.x, transformed_obs.y, cur_l.x_i, cur_l.y_i);
                 if(distance < distance_min){
                     distance_min = distance;
                     landmark = cur_l;
@@ -148,7 +148,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
             // update weights using Multivariate Gaussian Distribution
             // equation given in Transformations and Associations Quiz
-            double num = exp(-0.5 * (pow((transformed_obs.x - landmark.x_f), 2) / pow(std_x, 2) + pow((transformed_obs.y - landmark.y_f), 2) / pow(std_y, 2)));
+            double num = exp(-0.5 * (pow((transformed_obs.x - landmark.x_i), 2) / pow(std_x, 2) + pow((transformed_obs.y - landmark.y_i), 2) / pow(std_y, 2)));
             double denom = 2 * M_PI * std_x * std_y;
             wt *= num/denom;
         }
