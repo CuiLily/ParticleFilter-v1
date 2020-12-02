@@ -40,8 +40,8 @@ struct LandmarkObs {
 
     int id;
     // position of center
-    double x;			// Local (vehicle coordinates) x position of landmark observation [m]
-    double y;			// Local (vehicle coordinates) y position of landmark observation [m]
+    double x;			// u coordinate on image [pixel] u points to right
+    double y;			// v coordinate on image [pixel] v points to down
 
 	// probability for each candidates of each digit
 	double d10, d11, d12, d13, d14, d15, d16, d17, d18 ,d19; // digit1
@@ -246,14 +246,14 @@ inline bool read_landmark_data(std::string filename, std::vector<LandmarkObs>& o
 		std::istringstream iss_obs(line_obs);
 
 		// Declare position values:
-		double local_x, local_y;
+		double local_u, local_v;
         double d10, d11, d12, d13, d14, d15, d16, d17, d18 ,d19; // digit1
         double d20, d21, d22, d23, d24, d25, d26, d27, d28, d29; // digit2
         double d30, d31, d32, d33, d34, d35, d36, d37, d38, d39; // digit3
 
 		//read data from line to values:
-		iss_obs >> local_x;
-		iss_obs >> local_y;
+		iss_obs >> local_u;
+		iss_obs >> local_v;
 		// for digit1
 		iss_obs >> d10;
         iss_obs >> d11;
@@ -288,15 +288,15 @@ inline bool read_landmark_data(std::string filename, std::vector<LandmarkObs>& o
         iss_obs >> d38;
         iss_obs >> d39;
 
-        cout << "local_x: " << local_x << endl;
-        cout << "local_y: " << local_y << endl;
+        cout << "local_u: " << local_u << endl;
+        cout << "local_v: " << local_v << endl;
 
 		// Declare single landmark measurement:
 		LandmarkObs meas; //LandmarkObs是一个结构体
 
 		// Set values
-		meas.x = local_x;
-		meas.y = local_y;
+		meas.x = local_u;
+		meas.y = local_v;
 		//for digit2
 		meas.d10 = d10;
         meas.d11 = d11;

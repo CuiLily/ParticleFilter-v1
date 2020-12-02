@@ -1,12 +1,13 @@
 /*
  * particle_filter.cpp
  */
-
+#include <cmath>
 #include <random>
 #include <algorithm>
 #include <iostream>
 #include <numeric>
-
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
 #include "particle_filter.h"
 
 using namespace std;
@@ -52,9 +53,6 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
 	// Add measurements to each particle and add random Gaussian noise.
 	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
-	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
-	//  http://www.cplusplus.com/reference/random/default_random_engine/
-
     double std_x, std_y, std_theta; // Standard deviations for x, y, and theta
     std_x = std_pos[0];
     std_y = std_pos[1];
@@ -103,17 +101,9 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		std::vector<LandmarkObs> observations, Map map_landmarks) {
-	// Update the weights of each particle using a multi-variate Gaussian distribution. You can read
-	//   more about this distribution here: https://en.wikipedia.org/wiki/Multivariate_normal_distribution
-	// NOTE: The observations are given in the VEHICLE'S coordinate system. Your particles are located
+	// Update the weights of each particle using a multi-variate Gaussian distribution.
+	// NOTE: The observations are given in the image coordinate system. Your particles are located
 	//   according to the MAP'S coordinate system. You will need to transform between the two systems.
-	//   Keep in mind that this transformation requires both rotation AND translation (but no scaling).
-	//   The following is a good resource for the theory:
-	//   https://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
-	//   and the following is a good resource for the actual equation to implement (look at equation 
-	//   3.33. Note that you'll need to switch the minus sign in that equation to a plus to account 
-	//   for the fact that the map's y-axis actually points downwards.)
-	//   http://planning.cs.uiuc.edu/node99.html
 
     double std_x = std_landmark[0];
     double std_y = std_landmark[1];
@@ -123,32 +113,79 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         Particle *p = &particles[i];
         double wt = 1.0;
 
-        // convert observation from vehicle's to map's coordinate system
+        // convert observation from image to map's coordinate system
         for(int j=0; j<observations.size(); ++j){
             LandmarkObs current_obs = observations[j];
-            LandmarkObs transformed_obs;
+            //LandmarkObs transformed_obs;
 
-            transformed_obs.x = (current_obs.x * cos(p->theta)) - (current_obs.y * sin(p->theta)) + p->x;
-            transformed_obs.y = (current_obs.x * sin(p->theta)) + (current_obs.y * cos(p->theta)) + p->y;
-            transformed_obs.id = current_obs.id;
+            double fx = 8.6264757161231410e+02;
+            double cx = 1.4419426569209147e+03;
+            double fy = 8.6179474700008700e+02;
+            double cy = 1.4373417306128667e+03;
 
-            // find the predicted measurement that is closest to each observed measurement and assign
-            // the observed measurement to this particular landmark
+            Eigen::Matrix3d K;
+            K << fx, 0,  cx,
+                  0, fy, cy,
+                  0, 0,  1;
+
+            Eigen::Vector3d px_homo(current_obs.x, current_obs.y, 1.0);
+            Eigen::Vector3d f; //bearing vector
+
+            double h = 1.77; //camera height: 1.77m
+            Eigen::Vector3d c(p->x, p->y, h); //camera position
+
+            // Rotation from camera frame to world
+            Eigen::Matrix3d Rwc;
+            Rwc << cos(p->theta), -sin(p->theta), 0.0,
+                   sin(p->theta), cos(p->theta),  0.0,
+                   0.0, 0.0, 1.0;
+
+            // calculate bearing vector
+            f = K.inverse() * px_homo;
+
+            // depth: lambda
+            double lambda = - h / f[2];
+            // calculate s = (a, b, 0)
+            double a = p->x + lambda * (f[0] * cos(p->theta) - f[1] * sin(p->theta));
+            double b = p->y + lambda * (f[0] * sin(p->theta) + f[1] * cos(p->theta));
+
+            Eigen::Vector3d s(a, b, 0.0); //center of parking lot code in the world
+
+            // find the closest neighbor in the map list
             Map::single_landmark_s landmark;
             double distance_min = std::numeric_limits<double>::max();
 
             for(int k=0; k<map_landmarks.landmark_list.size(); ++k){
                 Map::single_landmark_s cur_l = map_landmarks.landmark_list[k];
-                double distance = dist(transformed_obs.x, transformed_obs.y, cur_l.x_i, cur_l.y_i);
+                double distance = dist(a, b, cur_l.x_i, cur_l.y_i);
                 if(distance < distance_min){
                     distance_min = distance;
                     landmark = cur_l;
                 }
             }
 
+
+//            transformed_obs.x = (current_obs.x * cos(p->theta)) - (current_obs.y * sin(p->theta)) + p->x;
+//            transformed_obs.y = (current_obs.x * sin(p->theta)) + (current_obs.y * cos(p->theta)) + p->y;
+//            transformed_obs.id = current_obs.id;
+
+//            // find the predicted measurement that is closest to each observed measurement and assign
+//            // the observed measurement to this particular landmark
+//            Map::single_landmark_s landmark;
+//            double distance_min = std::numeric_limits<double>::max();
+//
+//            for(int k=0; k<map_landmarks.landmark_list.size(); ++k){
+//                Map::single_landmark_s cur_l = map_landmarks.landmark_list[k];
+//                double distance = dist(transformed_obs.x, transformed_obs.y, cur_l.x_i, cur_l.y_i);
+//                if(distance < distance_min){
+//                    distance_min = distance;
+//                    landmark = cur_l;
+//                }
+//            }
+
             // update weights using Multivariate Gaussian Distribution
             // equation given in Transformations and Associations Quiz
-            double num = exp(-0.5 * (pow((transformed_obs.x - landmark.x_i), 2) / pow(std_x, 2) + pow((transformed_obs.y - landmark.y_i), 2) / pow(std_y, 2)));
+            double num = exp(-0.5 * (pow((a - landmark.x_i), 2) / pow(std_x, 2) + pow((b - landmark.y_i), 2) / pow(std_y, 2)));
             double denom = 2 * M_PI * std_x * std_y;
             wt *= num/denom;
         }
