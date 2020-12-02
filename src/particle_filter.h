@@ -8,7 +8,8 @@
 #define PARTICLE_FILTER_H_
 
 #include "helper_functions.h"
-
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
 struct Particle {
 
 	int id;
@@ -72,7 +73,25 @@ public:
 	 * @param observations Vector of landmark observations
 	 */
 	void dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations);
-	
+
+    /**
+ * geom_cons (geometry constriant) consider more on those "closest neighbor" with small Euclidean distances.
+ * @param K :camera intrsinsic matrix
+ * @param Rwc: rotation matrix from camera frame to world
+ * @param px_homo: center's homogeneous image coordinate
+ * @param s: center's world coordinate
+ * @param c: camera's world coordinate
+ */
+    double geom_cons(Eigen::Matrix3d K, Eigen::Matrix3d Rwc, Eigen::Vector3d px_homo, Eigen::Vector3d s,
+                     Eigen::Vector3d c);
+
+    /**
+    * seman_cons (semantic constriant) take OCR probability into consideration.
+    * @param nn: nearest neighbor in map_data List
+    * @param current_obs: observation at current
+    */
+    double seman_cons(Map::single_landmark_s nn, LandmarkObs current_obs);
+
 	/**
 	 * updateWeights Updates the weights for each particle based on the likelihood of the 
 	 *   observed measurements. 

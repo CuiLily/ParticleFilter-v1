@@ -99,6 +99,78 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
     }
 }
 
+double ParticleFilter::geom_cons(Eigen::Matrix3d K, Eigen::Matrix3d Rwc, Eigen::Vector3d px_homo, Eigen::Vector3d s,
+                                 Eigen::Vector3d c)
+{
+    Eigen::Vector3d vec = s - c; //vec from camera to center
+    Eigen::Vector3d reprojected_homo = K * (Rwc.transpose() * vec); // reprojected homogeneous pixel
+    // Homogeneous to Euclidean
+    Eigen::Vector2d reprojected(reprojected_homo[0]/reprojected_homo[2], reprojected_homo[1]/reprojected_homo[2]);
+    // calculate geometry constriant term
+    Eigen::Vector2d m(px_homo[0] - reprojected[0], px_homo[1] - reprojected[1]);
+    double inner_product = m.transpose() * m;
+    const double sigma = 10.0; // unit:pixel
+    double geo_term = exp(- inner_product / sigma);
+    return geo_term;
+
+}
+
+double ParticleFilter::seman_cons(Map::single_landmark_s nn, LandmarkObs current_obs)
+{
+    // get true digits
+    int true_digits = stoi(nn.id_i);
+
+    /** 1st digit **/
+    int digit1 = true_digits / 100 % 10;
+    // build d1_tilde
+    Eigen::VectorXd d1_tilde(9);
+    for(int i=0; i<9; i++)
+    {
+        d1_tilde[i] = 0.0;
+    }
+    d1_tilde[digit1] = 1.0;
+    // get d1
+    Eigen::VectorXd d1(9);
+    d1<< current_obs.d10, current_obs.d11, current_obs.d12, current_obs.d13, current_obs.d14,
+         current_obs.d15, current_obs.d16, current_obs.d17, current_obs.d18 ,current_obs.d19;
+    double probability_d1 = d1_tilde.transpose() * d1;
+
+    /** 2nd digit **/
+    int digit2 = true_digits / 10 % 10;
+    // build d2_tilde
+    Eigen::VectorXd d2_tilde(9);
+    for(int i=0; i<9; i++)
+    {
+        d2_tilde[i] = 0.0;
+    }
+    d2_tilde[digit2] = 1.0;
+    // get d2
+    Eigen::VectorXd d2(9);
+    d1<< current_obs.d20, current_obs.d21, current_obs.d22, current_obs.d23, current_obs.d24,
+         current_obs.d25, current_obs.d26, current_obs.d27, current_obs.d28 ,current_obs.d29;
+    double probability_d2 = d2_tilde.transpose() * d2;
+
+    /** 3rd digit **/
+    int digit3 = true_digits % 10;
+    // build d1_tilde
+    Eigen::VectorXd d3_tilde(9);
+    for(int i=0; i<9; i++)
+    {
+        d3_tilde[i] = 0.0;
+    }
+    d3_tilde[digit3] = 1.0;
+    // get d3
+    Eigen::VectorXd d3(9);
+    d1<< current_obs.d30, current_obs.d31, current_obs.d32, current_obs.d33, current_obs.d34,
+         current_obs.d35, current_obs.d36, current_obs.d37, current_obs.d38 ,current_obs.d39;
+    double probability_d3 = d3_tilde.transpose() * d3;
+
+    //get final semantic constraint
+    double seman_term = probability_d1 * probability_d2 * probability_d3;
+
+    return seman_term;
+}
+
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		std::vector<LandmarkObs> observations, Map map_landmarks) {
 	// Update the weights of each particle using a multi-variate Gaussian distribution.
@@ -200,10 +272,12 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     }
 }
 
+
+
+
+
 void ParticleFilter::resample() {
 	// Resample particles with replacement with probability proportional to their weight.
-	// NOTE: You may find std::discrete_distribution helpful here.
-	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
 
     default_random_engine gen;
 
