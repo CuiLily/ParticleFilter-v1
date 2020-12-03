@@ -75,15 +75,15 @@ public:
 	void dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations);
 
     /**
- * geom_cons (geometry constriant) consider more on those "closest neighbor" with small Euclidean distances.
+ * geo_cons (geometry constriant) consider more on those "closest neighbor" with small Euclidean distances.
  * @param K :camera intrsinsic matrix
  * @param Rwc: rotation matrix from camera frame to world
  * @param px_homo: center's homogeneous image coordinate
  * @param s: center's world coordinate
  * @param c: camera's world coordinate
  */
-    double geom_cons(Eigen::Matrix3d K, Eigen::Matrix3d Rwc, Eigen::Vector3d px_homo, Eigen::Vector3d s,
-                     Eigen::Vector3d c);
+    double geo_cons(Eigen::Matrix3d K, Eigen::Matrix3d Rwc, Eigen::Vector3d px_homo, Eigen::Vector3d s,
+                    Eigen::Vector3d c);
 
     /**
     * seman_cons (semantic constriant) take OCR probability into consideration.
@@ -91,6 +91,13 @@ public:
     * @param current_obs: observation at current
     */
     double seman_cons(Map::single_landmark_s nn, LandmarkObs current_obs);
+
+    /**
+    * meas_model (measurement model) combine geometry and semantic constraints.
+    * @param geo_cons: geometry constraint
+    * @param seman_cons: semanctic constraint
+    */
+    double meas_model(double geo_cons, double seman_cons);
 
 	/**
 	 * updateWeights Updates the weights for each particle based on the likelihood of the 

@@ -99,8 +99,8 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
     }
 }
 
-double ParticleFilter::geom_cons(Eigen::Matrix3d K, Eigen::Matrix3d Rwc, Eigen::Vector3d px_homo, Eigen::Vector3d s,
-                                 Eigen::Vector3d c)
+double ParticleFilter::geo_cons(Eigen::Matrix3d K, Eigen::Matrix3d Rwc, Eigen::Vector3d px_homo, Eigen::Vector3d s,
+                                Eigen::Vector3d c)
 {
     Eigen::Vector3d vec = s - c; //vec from camera to center
     Eigen::Vector3d reprojected_homo = K * (Rwc.transpose() * vec); // reprojected homogeneous pixel
@@ -169,6 +169,11 @@ double ParticleFilter::seman_cons(Map::single_landmark_s nn, LandmarkObs current
     double seman_term = probability_d1 * probability_d2 * probability_d3;
 
     return seman_term;
+}
+
+double ParticleFilter::meas_model(double geo_cons, double seman_cons)
+{
+    return geo_cons * seman_cons;
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
@@ -271,10 +276,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         weights[i] = p->weight;
     }
 }
-
-
-
-
 
 void ParticleFilter::resample() {
 	// Resample particles with replacement with probability proportional to their weight.
