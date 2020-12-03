@@ -23,8 +23,6 @@ int main() {
 	double max_translation_error = 1; // Max allowable translation error to pass [m]
 	double max_yaw_error = 0.05; // Max allowable yaw error [rad]
 
-
-
 	// Start timer.
 	int start = clock();
 	
@@ -78,11 +76,11 @@ int main() {
 	for (int i = 0; i < num_time_steps; ++i) {
 		cout << "Time step: " << i << endl;
 		// Read in landmark observations for current time step.
-		ostringstream file;//向文件file写入6位数字
-		file << "ourdata/observation/observations_" << setfill('0') << setw(6) << i+1 << ".txt";
+		ostringstream file;
+		file << "ourdata/observation/observations_" << i << ".txt";
 		vector<LandmarkObs> observations;
 		if (!read_landmark_data(file.str(), observations)) {
-			cout << "Error: Could not open observation file " << i+1 << endl;
+			cout << "Error: Could not open observation file " << i << endl;
 			return -1;
 		}
 		
