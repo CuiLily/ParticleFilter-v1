@@ -1,6 +1,7 @@
 /*
  * particle_filter.cpp
  */
+#include <stdlib.h>
 #include <cmath>
 #include <random>
 #include <algorithm>
@@ -118,49 +119,57 @@ double ParticleFilter::geo_cons(Eigen::Matrix3d K, Eigen::Matrix3d Rwc, Eigen::V
 double ParticleFilter::seman_cons(Map::single_landmark_s nn, LandmarkObs current_obs)
 {
     // get true digits
-    int true_digits = stoi(nn.id_i);
+    string id_digits_str(nn.id_i, 1,3);
+    cout<<id_digits_str<<endl;
 
+    char start = '0';
     /** 1st digit **/
-    int digit1 = true_digits / 100 % 10;
+    char digit1_str = id_digits_str[0];
+    int digit1 = digit1_str - start;
     // build d1_tilde
-    Eigen::VectorXd d1_tilde(9);
-    for(int i=0; i<9; i++)
+    Eigen::VectorXd d1_tilde(10);
+    for(int i=0; i<=9; i++)
     {
         d1_tilde[i] = 0.0;
     }
     d1_tilde[digit1] = 1.0;
+    cout<<"d1_tilde:"<<d1_tilde.transpose()<<endl;
     // get d1
-    Eigen::VectorXd d1(9);
+    Eigen::VectorXd d1(10);
     d1<< current_obs.d10, current_obs.d11, current_obs.d12, current_obs.d13, current_obs.d14,
          current_obs.d15, current_obs.d16, current_obs.d17, current_obs.d18 ,current_obs.d19;
     double probability_d1 = d1_tilde.transpose() * d1;
 
     /** 2nd digit **/
-    int digit2 = true_digits / 10 % 10;
+    char digit2_str = id_digits_str[1];
+    int digit2= digit2_str - start;
     // build d2_tilde
-    Eigen::VectorXd d2_tilde(9);
-    for(int i=0; i<9; i++)
+    Eigen::VectorXd d2_tilde(10);
+    for(int i=0; i<=9; i++)
     {
         d2_tilde[i] = 0.0;
     }
     d2_tilde[digit2] = 1.0;
+    cout<<"d2_tilde:"<<d2_tilde.transpose()<<endl;
     // get d2
-    Eigen::VectorXd d2(9);
+    Eigen::VectorXd d2(10);
     d1<< current_obs.d20, current_obs.d21, current_obs.d22, current_obs.d23, current_obs.d24,
          current_obs.d25, current_obs.d26, current_obs.d27, current_obs.d28 ,current_obs.d29;
     double probability_d2 = d2_tilde.transpose() * d2;
 
     /** 3rd digit **/
-    int digit3 = true_digits % 10;
+    char digit3_str = id_digits_str[2];
+    int digit3 = digit3_str - start;
     // build d1_tilde
-    Eigen::VectorXd d3_tilde(9);
-    for(int i=0; i<9; i++)
+    Eigen::VectorXd d3_tilde(10);
+    for(int i=0; i<=9; i++)
     {
         d3_tilde[i] = 0.0;
     }
     d3_tilde[digit3] = 1.0;
+    cout<<"d3_tilde:"<<d3_tilde.transpose()<<endl;
     // get d3
-    Eigen::VectorXd d3(9);
+    Eigen::VectorXd d3(10);
     d1<< current_obs.d30, current_obs.d31, current_obs.d32, current_obs.d33, current_obs.d34,
          current_obs.d35, current_obs.d36, current_obs.d37, current_obs.d38 ,current_obs.d39;
     double probability_d3 = d3_tilde.transpose() * d3;
@@ -182,6 +191,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	// NOTE: The observations are given in the image coordinate system. Your particles are located
 	//   according to the MAP'S coordinate system. You will need to transform between the two systems.
 
+    double fx = 8.6264757161231410e+02;
+    double cx = 1.4419426569209147e+03;
+    double fy = 8.6179474700008700e+02;
+    double cy = 1.4373417306128667e+03;
+
+    Eigen::Matrix3d K;
+    K << fx, 0,  cx,
+            0, fy, cy,
+            0, 0,  1;
+    double h = 1.77; //camera height: 1.77m
+
     double std_x = std_landmark[0];
     double std_y = std_landmark[1];
     double weights_sum = 0;
@@ -190,33 +210,20 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         Particle *p = &particles[i];
         double wt = 1.0;
 
+        Eigen::Vector3d c(p->x, p->y, h); //camera position
+        // Rotation from camera frame to world
+        Eigen::Matrix3d Rwc;
+        Rwc << cos(p->theta), -sin(p->theta), 0.0,
+                sin(p->theta), cos(p->theta),  0.0,
+                0.0, 0.0, 1.0;
+
         // convert observation from image to map's coordinate system
         for(int j=0; j<observations.size(); ++j){
             LandmarkObs current_obs = observations[j];
             //LandmarkObs transformed_obs;
 
-            double fx = 8.6264757161231410e+02;
-            double cx = 1.4419426569209147e+03;
-            double fy = 8.6179474700008700e+02;
-            double cy = 1.4373417306128667e+03;
-
-            Eigen::Matrix3d K;
-            K << fx, 0,  cx,
-                  0, fy, cy,
-                  0, 0,  1;
-
             Eigen::Vector3d px_homo(current_obs.x, current_obs.y, 1.0);
             Eigen::Vector3d f; //bearing vector
-
-            double h = 1.77; //camera height: 1.77m
-            Eigen::Vector3d c(p->x, p->y, h); //camera position
-
-            // Rotation from camera frame to world
-            Eigen::Matrix3d Rwc;
-            Rwc << cos(p->theta), -sin(p->theta), 0.0,
-                   sin(p->theta), cos(p->theta),  0.0,
-                   0.0, 0.0, 1.0;
-
             // calculate bearing vector
             f = K.inverse() * px_homo;
 
@@ -225,7 +232,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
             // calculate s = (a, b, 0)
             double a = p->x + lambda * (f[0] * cos(p->theta) - f[1] * sin(p->theta));
             double b = p->y + lambda * (f[0] * sin(p->theta) + f[1] * cos(p->theta));
-
             Eigen::Vector3d s(a, b, 0.0); //center of parking lot code in the world
 
             // find the closest neighbor in the map list
@@ -240,6 +246,12 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                     landmark = cur_l;
                 }
             }
+
+            //measurement model
+            double geo_cons = ParticleFilter::geo_cons(K, Rwc, px_homo, s, c);
+            double seman_cons = ParticleFilter::seman_cons(landmark, current_obs);
+            double meas_prob = ParticleFilter::meas_model(geo_cons, seman_cons);
+            wt *= meas_prob;
 
 
 //            transformed_obs.x = (current_obs.x * cos(p->theta)) - (current_obs.y * sin(p->theta)) + p->x;
@@ -259,12 +271,12 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 //                    landmark = cur_l;
 //                }
 //            }
-
-            // update weights using Multivariate Gaussian Distribution
-            // equation given in Transformations and Associations Quiz
-            double num = exp(-0.5 * (pow((a - landmark.x_i), 2) / pow(std_x, 2) + pow((b - landmark.y_i), 2) / pow(std_y, 2)));
-            double denom = 2 * M_PI * std_x * std_y;
-            wt *= num/denom;
+//
+//            // update weights using Multivariate Gaussian Distribution
+//            // equation given in Transformations and Associations Quiz
+//            double num = exp(-0.5 * (pow((a - landmark.x_i), 2) / pow(std_x, 2) + pow((b - landmark.y_i), 2) / pow(std_y, 2)));
+//            double denom = 2 * M_PI * std_x * std_y;
+//            wt *= num/denom;
         }
         weights_sum += wt;
         p->weight = wt;
